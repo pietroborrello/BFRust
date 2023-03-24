@@ -14,7 +14,7 @@ fn main() {
         std::process::exit(1);
     }
 
-    let filename  = &args[1];
+    let filename = &args[1];
 
     let filecontent = fs::read(filename).expect(&format!("Failed to read file \"{}\"", &filename));
 

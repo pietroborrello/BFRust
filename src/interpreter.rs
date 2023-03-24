@@ -1,7 +1,7 @@
 use crate::runner::Runner;
 use std::{
-    collections::BTreeMap,
-    io::{self, Error, ErrorKind, Read, Result}, time::Instant,
+    io::{self, Error, ErrorKind, Read, Result},
+    time::Instant,
 };
 
 pub struct Interpreter {
@@ -44,7 +44,11 @@ impl Interpreter {
         match opcode {
             b'>' => self.ptr = self.ptr.wrapping_add(1) % self.memory.len(),
 
-            b'<' => self.ptr = (self.ptr as isize).wrapping_sub(1).rem_euclid(self.memory.len() as isize) as usize,
+            b'<' => {
+                self.ptr = (self.ptr as isize)
+                    .wrapping_sub(1)
+                    .rem_euclid(self.memory.len() as isize) as usize
+            }
 
             b'+' => self.memory[self.ptr] = self.memory[self.ptr].wrapping_add(1),
 
@@ -61,15 +65,19 @@ impl Interpreter {
                 };
             }
 
-            b'[' => if self.memory[self.ptr] == 0 { 
-                return Ok(self.matching_brackets[self.ip] + 1);
-            },
-
-            b']' => if self.memory[self.ptr] != 0 { 
-                return Ok(self.matching_brackets[self.ip] + 1);
+            b'[' => {
+                if self.memory[self.ptr] == 0 {
+                    return Ok(self.matching_brackets[self.ip] + 1);
+                }
             }
 
-            _ => ()
+            b']' => {
+                if self.memory[self.ptr] != 0 {
+                    return Ok(self.matching_brackets[self.ip] + 1);
+                }
+            }
+
+            _ => (),
         }
 
         Ok(self.ip + 1)
@@ -113,7 +121,10 @@ impl Runner for Interpreter {
         let duration = start.elapsed();
 
         print!("elapsed: {:?}", duration);
-        println!(" | M instructions/s: {:.04}", (self.instructions_executed as f64 / duration.as_secs_f64()) / 1_000_000f64);
+        println!(
+            " | M instructions/s: {:.04}",
+            (self.instructions_executed as f64 / duration.as_secs_f64()) / 1_000_000f64
+        );
 
         Ok(())
     }
