@@ -1,7 +1,7 @@
 use crate::runner::Runner;
 use std::{
     collections::BTreeMap,
-    io::{self, Error, ErrorKind, Read, Result},
+    io::{self, Error, ErrorKind, Read, Result}, time::Instant,
 };
 
 pub struct Interpreter {
@@ -19,6 +19,9 @@ pub struct Interpreter {
 
     // map for matching []
     matching_brackets: BTreeMap<usize, usize>,
+
+    // instructios executed
+    instructions_executed: u64,
 }
 
 impl Interpreter {
@@ -29,12 +32,14 @@ impl Interpreter {
             memory: vec![0; memory_size],
             ptr: 0,
             matching_brackets: BTreeMap::new(),
+            instructions_executed: 0,
         }
     }
 
     fn run_one(&mut self) -> Result<usize> {
         // get the opcode to run
         let opcode = self.bytecode[self.ip];
+        self.instructions_executed += 1;
 
         match opcode {
             b'>' => self.ptr = self.ptr.wrapping_add(1) % self.memory.len(),
@@ -99,9 +104,17 @@ impl Runner for Interpreter {
     fn run(&mut self) -> Result<()> {
         self.gather_matching_brackets()?;
 
+        let start = Instant::now();
+
         while self.ip < self.bytecode.len() {
             self.ip = self.run_one()?;
         }
+
+        let duration = start.elapsed();
+
+        print!("elapsed: {:?}", duration);
+        println!(" | M instructions/s: {:.04}", (self.instructions_executed as f64 / duration.as_secs_f64()) / 1_000_000f64);
+
         Ok(())
     }
 }
