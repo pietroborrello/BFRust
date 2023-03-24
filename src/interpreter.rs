@@ -17,8 +17,8 @@ pub struct Interpreter {
     // brainfuck pointer
     ptr: usize,
 
-    // map for matching []
-    matching_brackets: BTreeMap<usize, usize>,
+    // map for matching [], use a vector since all the keys are idxs
+    matching_brackets: Vec<usize>,
 
     // instructios executed
     instructions_executed: u64,
@@ -31,7 +31,7 @@ impl Interpreter {
             ip: 0,
             memory: vec![0; memory_size],
             ptr: 0,
-            matching_brackets: BTreeMap::new(),
+            matching_brackets: vec![0; memory_size],
             instructions_executed: 0,
         }
     }
@@ -62,11 +62,11 @@ impl Interpreter {
             }
 
             b'[' => if self.memory[self.ptr] == 0 { 
-                return Ok(*self.matching_brackets.get(&self.ip).unwrap() + 1);
+                return Ok(self.matching_brackets[self.ip] + 1);
             },
 
             b']' => if self.memory[self.ptr] != 0 { 
-                return Ok(*self.matching_brackets.get(&self.ip).unwrap() + 1);
+                return Ok(self.matching_brackets[self.ip] + 1);
             }
 
             _ => ()
@@ -89,8 +89,8 @@ impl Interpreter {
                     })?;
 
                     // keep track of both directions
-                    self.matching_brackets.insert(last_bracket, idx);
-                    self.matching_brackets.insert(idx, last_bracket);
+                    self.matching_brackets[last_bracket] = idx;
+                    self.matching_brackets[idx] = last_bracket;
                 }
 
                 _ => (),
