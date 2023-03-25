@@ -1,23 +1,45 @@
 mod interpreter;
 mod runner;
 
-use std::{env, fs};
+use std::fs;
+
+use clap::{Parser, ValueEnum};
 
 use crate::interpreter::Interpreter;
 use crate::runner::Runner;
 
+#[derive(ValueEnum, Clone, Debug)]
+enum BackendType {
+    C,
+    Asm,
+    Emu
+}
+
+#[derive(Parser)]
+#[derive(Debug)]
+struct Cli {
+    #[arg(value_enum, short, long)]
+    backend: Option<BackendType>,
+    filename: String,
+}
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let cli = Cli::parse();
 
-    if args.len() != 2 {
-        println!("usage: bfrust <file.bf>");
-        std::process::exit(1);
-    }
-
-    let filename = &args[1];
+    let filename = &cli.filename;
 
     let filecontent = fs::read(filename).expect(&format!("Failed to read file \"{}\"", &filename));
 
-    let mut interpreter = Interpreter::new(filecontent, 30000);
-    interpreter.run().expect("Failed to run");
+    match cli.backend {
+        None | Some(BackendType::Emu) => {
+            let mut interpreter = Interpreter::new(filecontent, 30000);
+            interpreter.run().expect("Failed to run");
+        },
+        Some(BackendType::Asm) => {
+            panic!("Not Implemented");
+        },
+        Some(BackendType::C) => {
+            panic!("Not Implemented");
+        },
+    }
 }
