@@ -1,12 +1,12 @@
-use crate::runner::Runner;
+use crate::{runner::Runner, utils::gather_matching_brackets};
 use std::{
     io::{self, Error, ErrorKind, Read, Result},
     time::Instant,
 };
 
-pub struct Interpreter {
+pub struct Interpreter<'a> {
     // brainfuck source code
-    bytecode: Vec<u8>,
+    bytecode: &'a Vec<u8>,
 
     // brainfuck instruction pointer
     ip: usize,
@@ -24,16 +24,16 @@ pub struct Interpreter {
     instructions_executed: u64,
 }
 
-impl Interpreter {
-    pub fn new(bytecode: Vec<u8>, memory_size: usize) -> Self {
-        Self {
+impl <'a> Interpreter<'a> {
+    pub fn new(bytecode: &'a Vec<u8>, memory_size: usize) -> Result<Self> {
+        Ok(Self {
             bytecode,
             ip: 0,
             memory: vec![0; memory_size],
             ptr: 0,
-            matching_brackets: vec![0; memory_size],
+            matching_brackets: gather_matching_brackets(bytecode)?,
             instructions_executed: 0,
-        }
+        })
     }
 
     fn run_one(&mut self) -> Result<usize> {
@@ -83,35 +83,11 @@ impl Interpreter {
         Ok(self.ip + 1)
     }
 
-    fn gather_matching_brackets(&mut self) -> Result<()> {
-        // keep track of where we met the [ brackets to match them
-        let mut brackets_queue: Vec<usize> = Vec::with_capacity(self.bytecode.len() / 2);
-
-        for (idx, opcode) in self.bytecode.iter().enumerate() {
-            match opcode {
-                b'[' => brackets_queue.push(idx),
-
-                b']' => {
-                    let last_bracket = brackets_queue.pop().ok_or_else(|| {
-                        Error::new(ErrorKind::InvalidData, "Mismatched bracket ]")
-                    })?;
-
-                    // keep track of both directions
-                    self.matching_brackets[last_bracket] = idx;
-                    self.matching_brackets[idx] = last_bracket;
-                }
-
-                _ => (),
-            }
-        }
-        Ok(())
-    }
+    
 }
 
-impl Runner for Interpreter {
+impl Runner for Interpreter<'_> {
     fn run(&mut self) -> Result<()> {
-        self.gather_matching_brackets()?;
-
         let start = Instant::now();
 
         while self.ip < self.bytecode.len() {

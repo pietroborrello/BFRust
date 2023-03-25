@@ -1,5 +1,6 @@
 mod interpreter;
 mod runner;
+mod utils;
 
 use std::fs;
 
@@ -32,7 +33,7 @@ fn main() {
 
     match cli.backend {
         None | Some(BackendType::Emu) => {
-            let mut interpreter = Interpreter::new(filecontent, 30000);
+            let mut interpreter = Interpreter::new(&filecontent, 30000).unwrap();
             interpreter.run().expect("Failed to run");
         },
         Some(BackendType::Asm) => {
