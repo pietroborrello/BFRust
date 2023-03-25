@@ -87,7 +87,7 @@ impl <'a> Interpreter<'a> {
 }
 
 impl Runner for Interpreter<'_> {
-    fn run(&mut self) -> Result<()> {
+    fn run(&mut self) -> Result<usize> {
         let start = Instant::now();
 
         while self.ip < self.bytecode.len() {
@@ -102,6 +102,6 @@ impl Runner for Interpreter<'_> {
             (self.instructions_executed as f64 / duration.as_secs_f64()) / 1_000_000f64
         );
 
-        Ok(())
+        Ok(0)
     }
 }
